@@ -1,0 +1,4 @@
+Before collecting the data, the audio.py need to get the csv from AVSpeech. (https://looking-to-listen.github.io/avspeech/download.html)
+Please rename train.csv to avspeech_train.csv and test.csv to avspeech_test.csv
+
+Add link,start_time,end_time,pos_x,pos_y to the head of csv file

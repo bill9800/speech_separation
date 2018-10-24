@@ -1,0 +1,2 @@
+download pretrained model from https://drive.google.com/file/d/1EXPBSXwTaqrSC0OhUdXNmKSh9qJUQ55-/view
+@Author:David Sandberg @Training using the VGGFace2 dataSet
