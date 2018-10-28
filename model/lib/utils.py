@@ -143,9 +143,9 @@ def generate_one_sample(audio_path_list,num_speaker,fix_sr=16000,verbose=0):
 
     # create mix audio according to mix rate
     mix_rate = 1.0 / float(num_speaker)
-    mix = np.empty(shape=data_list[0].shape)
+    mix = np.zeros(shape=data_list[0].shape)
     for data in data_list:
-        mix += data * mix_rate
+        np.add(mix,data*mix_rate)
 
     # transfrom data via STFT and several preprocessing function
     for i in range(num_speaker):
@@ -176,6 +176,7 @@ def generate_dataset(sample_range,repo_path,num_speaker=2,**kwargs):
     audio_path_list = []
     X_data = []
     y_data = []
+    num_data = 0
     for i in range(sample_range[0],sample_range[1]):
         path = repo_path + '/trim_audio_train%d.wav'%i
         if os.path.exists(path):
@@ -183,6 +184,7 @@ def generate_dataset(sample_range,repo_path,num_speaker=2,**kwargs):
 
     combinations = itertools.combinations(audio_path_list,num_speaker)
     for combo in combinations:
+        num_data += 1
         X_sample,y_sample = generate_one_sample(combo,num_speaker)
         X_data.append(X_sample)
         y_data.append(y_sample)
@@ -190,6 +192,7 @@ def generate_dataset(sample_range,repo_path,num_speaker=2,**kwargs):
     X_data = np.asarray(X_data)
     y_data = np.asarray(y_data)
 
+    print('number of the data generated: ',num_data)
     return X_data, y_data
 
 #### normalization function ####
