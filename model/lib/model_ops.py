@@ -1,6 +1,9 @@
 import tensorflow as tf
 import os, argparse
 from tensorflow.python.tools.freeze_graph import freeze_graph
+from keras import Model
+from keras.utils import multi_gpu_model
+
 
 def save_model(model_dir,output_name,type='pb'):
     if type == 'pb':
@@ -58,5 +61,30 @@ def inspect_operation(graph_path,output_txt_file):
         print('OPS counts:')
         for i in sorted_ops_count:
             print("{} : {}".format(i[0], i[1]))
+
+class ModelMGPU(Model):
+    def __init__(self, ser_model, gpus):
+        pmodel = multi_gpu_model(ser_model, gpus)
+        self.__dict__.update(pmodel.__dict__)
+        self._smodel = ser_model
+
+    def __getattribute__(self, attrname):
+        '''Override load and save methods to be used from the serial-model. The
+        serial-model holds references to the weights in the multi-gpu model.
+        '''
+        # return Model.__getattribute__(self, attrname)
+        if 'load' in attrname or 'save' in attrname:
+            return getattr(self._smodel, attrname)
+
+        return super(ModelMGPU, self).__getattribute__(attrname)
+
+
+
+
+
+
+
+
+
 
 
