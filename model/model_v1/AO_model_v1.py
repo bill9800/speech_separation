@@ -1,11 +1,15 @@
 import sys
 sys.path.append('../lib')
 import model_AO as AO
+from model_ops import ModelMGPU
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback
 from keras.models import Model, load_model
 from MyGenerator import AudioGenerator
 from keras.callbacks import TensorBoard
+from keras import optimizers
 import os
+
+
 
 # create AO model
 #############################################################
@@ -16,8 +20,13 @@ RESTORE = True
 # super parameters
 people_num = 2
 epochs = 20
-initial_epoch = 0
-batch_size = 2
+initial_epoch = 2
+batch_size = 8 # 4 to feed one 16G GPU
+
+# physical devices option to accelerate training process
+workers = 1 # num of core
+use_multiprocessing = False
+NUM_GPU = 2
 #############################################################
 
 # create folder to save models
@@ -55,20 +64,34 @@ with open('../../data/audio/audio_database/dataset_val.txt', 'r') as v:
 
 # the training steps
 if RESTORE:
-    AO_model = load_model('./saved_models_AO/AOmodel-2p-001-0.00000.h5')
+    AO_model = load_model('./saved_models_AO/AOmodel-2p-002-0.00000.h5')
 else:
     AO_model = AO.AO_model(people_num)
 
 train_generator = AudioGenerator(trainfile,database_dir_path= '../../data/audio/audio_database', batch_size=batch_size, shuffle=True)
 val_generator = AudioGenerator(valfile,database_dir_path='../../data/audio/audio_database', batch_size=batch_size, shuffle=True)
 
-AO_model.fit_generator(generator=train_generator,
-                       validation_data=val_generator,
-                       epochs=epochs,
-                       callbacks=[TensorBoard(log_dir='./log_AO'), checkpoint, rlr],
-                       initial_epoch=initial_epoch
-                       )
-
+if NUM_GPU > 1:
+    parallel_model = ModelMGPU(AO_model,NUM_GPU)
+    adam = optimizers.Adam()
+    parallel_model.compile(loss='mse',optimizer=adam)
+    parallel_model.fit_generator(generator=train_generator,
+                           validation_data=val_generator,
+                           epochs=epochs,
+                           workers = workers,
+                           use_multiprocessing= use_multiprocessing,
+                           callbacks=[TensorBoard(log_dir='./log_AO'), checkpoint, rlr],
+                           initial_epoch=initial_epoch
+                           )
+if NUM_GPU <= 1:
+    AO_model.fit_generator(generator=train_generator,
+                           validation_data=val_generator,
+                           epochs=epochs,
+                           workers = workers,
+                           use_multiprocessing= use_multiprocessing,
+                           callbacks=[TensorBoard(log_dir='./log_AO'), checkpoint, rlr],
+                           initial_epoch=initial_epoch
+                           )
 
 
 
