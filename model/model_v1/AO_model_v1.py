@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../lib')
 import model_AO as AO
-from model_ops import ModelMGPU
+from model_ops import ModelMGPU,latest_file
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback
 from keras.models import Model, load_model
 from MyGenerator import AudioGenerator
@@ -13,24 +13,27 @@ import os
 
 # create AO model
 #############################################################
-RESTORE = True
+RESTORE = False
 # If set true, continue training from last checkpoint
 # needed change 1:h5 file name, 2:epochs num, 3:initial_epoch
 
 # super parameters
 people_num = 2
-epochs = 20
-initial_epoch = 2
-batch_size = 8 # 4 to feed one 16G GPU
+epochs = 100
+initial_epoch = 0
+batch_size = 16 # 4 to feed one 16G GPU
 
 # physical devices option to accelerate training process
 workers = 1 # num of core
 use_multiprocessing = False
 NUM_GPU = 2
+
+# PATH
+path = './saved_models_AO_with_norm' # model path
+database_dir_path = '../../data/audio/audio_database'
 #############################################################
 
 # create folder to save models
-path = './saved_models_AO'
 folder = os.path.exists(path)
 if not folder:
     os.makedirs(path)
@@ -56,20 +59,23 @@ rlr = LearningRateScheduler(scheduler, verbose=1)
 # format: mix.npy single.npy single.npy
 trainfile = []
 valfile = []
-with open('../../data/audio/audio_database/dataset_train.txt', 'r') as t:
+with open((database_dir_path+'/dataset_train.txt'), 'r') as t:
     trainfile = t.readlines()
-with open('../../data/audio/audio_database/dataset_val.txt', 'r') as v:
+with open((database_dir_path+'/dataset_val.txt'), 'r') as v:
     valfile = v.readlines()
 # ///////////////////////////////////////////////////////// #
 
 # the training steps
 if RESTORE:
-    AO_model = load_model('./saved_models_AO/AOmodel-2p-002-0.00000.h5')
+    latest_file = latest_file(path+'/')
+    AO_model = load_model(latest_file)
+    info = latest_file.strip().split('-')
+    initial_epoch = int(info[-2])
 else:
     AO_model = AO.AO_model(people_num)
 
-train_generator = AudioGenerator(trainfile,database_dir_path= '../../data/audio/audio_database', batch_size=batch_size, shuffle=True)
-val_generator = AudioGenerator(valfile,database_dir_path='../../data/audio/audio_database', batch_size=batch_size, shuffle=True)
+train_generator = AudioGenerator(trainfile,database_dir_path= database_dir_path, batch_size=batch_size, shuffle=True)
+val_generator = AudioGenerator(valfile,database_dir_path=database_dir_path, batch_size=batch_size, shuffle=True)
 
 if NUM_GPU > 1:
     parallel_model = ModelMGPU(AO_model,NUM_GPU)
