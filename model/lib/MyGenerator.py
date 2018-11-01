@@ -4,7 +4,8 @@ import keras
 
 class AudioGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, filename, database_dir_path ,Xdim=(298, 257, 2), ydim=(298, 257, 2, 2), batch_size=4, shuffle=True):
+    def __init__(self, filename, database_dir_path,Xdim=(298, 257, 2), ydim=(298, 257, 2, 2), batch_size=4, shuffle=True,
+                 input_norm=True,output='sigmoid'):
         'Initialization'
         self.filename = filename
         self.Xdim = Xdim
@@ -13,6 +14,8 @@ class AudioGenerator(keras.utils.Sequence):
         self.shuffle = shuffle
         self.on_epoch_end()
         self.database_dir_path = database_dir_path
+        self.input_norm = input_norm
+        self.output = output
 
     def __len__(self):
         'Denotes the number of batches per epoch'
@@ -28,6 +31,16 @@ class AudioGenerator(keras.utils.Sequence):
 
         # Generate data
         X, y = self.__data_generation(filename_temp)
+
+        if self.input_norm:
+            # norm scale
+            norm_scale = 90
+            X = np.divide(X,norm_scale)
+
+        if self.output == 'sigmoid':
+            # output compress process
+            y = np.abs(y)
+            y = 1/(1+np.exp(-y))
 
         return X, y
 
