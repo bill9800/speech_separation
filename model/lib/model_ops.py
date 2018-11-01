@@ -78,7 +78,12 @@ class ModelMGPU(Model):
 
         return super(ModelMGPU, self).__getattribute__(attrname)
 
-
+def latest_file(dir):
+    # get latest checkpoint
+    lists = os.listdir(dir)
+    lists.sort(key=lambda fn: os.path.getmtime(dir + fn))
+    file_latest = os.path.join(dir, lists[-1])
+    return file_latest
 
 
 
