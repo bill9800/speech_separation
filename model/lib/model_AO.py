@@ -9,10 +9,13 @@ from keras.models import Model, load_model
 from keras.layers.recurrent import LSTM
 from keras.initializers import he_normal
 import numpy as np
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, LearningRateScheduler, Callback
 from keras.callbacks import TensorBoard
 import tensorflow as tf
 import os
+from keras import backend as K
+from MyGenerator import AudioGenerator
+
 
 
 def AO_model(people_num=2):
@@ -116,34 +119,96 @@ def AO_model(people_num=2):
     AO_model = Model(inputs=model_input, outputs=complex_mask_out)
 
     # compile AO_model
-    AO_model.compile(optimizer='adam', loss='mse')
+    adam = optimizers.Adam()
+    AO_model.compile(optimizer=adam, loss='mse')
 
     return AO_model
 
 
 if __name__ == '__main__':
-    people_num = 2
-    audio_input = np.random.rand(5, 298, 257, 2)        # 5 audio parts, (298, 257, 2) stft feature
-    audio_label = np.random.rand(5, 298, 257, 2, people_num)     # 5 audio parts, (298, 257, 2) stft feature, people num to be defined
+    #############################################################
+    RESTORE = True
+    # If set true, continue training from last checkpoint
+    # needed change 1:h5 file name, 2:epochs num, 3:initial_epoch
 
+    # super parameters
+    people_num = 2
+    epochs = 50
+    initial_epoch = 0
+    batch_size = 2
+    #############################################################
+
+    # audio_input = np.random.rand(5, 298, 257, 2)        # 5 audio parts, (298, 257, 2) stft feature
+    # audio_label = np.random.rand(5, 298, 257, 2, people_num)     # 5 audio parts, (298, 257, 2) stft feature, people num to be defined
+
+    # ///////////////////////////////////////////////////////// #
+    # create folder to save models
     path = './saved_models_AO'
     folder = os.path.exists(path)
-
     if not folder:
         os.makedirs(path)
         print('create folder to save models')
-
-    filepath = path + "/AOmodel-" + str(people_num) + "p-{epoch:02d}-{val_loss:.4f}.h5"
+    filepath = path + "/AOmodel-" + str(people_num) + "p-{epoch:03d}-{val_loss:.10f}.h5"
     checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+    # checkpoint2 = ModelCheckpoint(path + "/AOmodel-latest-" + str(people_num) + ".h5", monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+    # ///////////////////////////////////////////////////////// #
 
-    AO_model = AO_model(people_num)
-    AO_model.fit(audio_input, audio_label,
-                 epochs=5,
-                 batch_size=2,
-                 validation_data=(audio_input, audio_label),
-                 shuffle=False,
-                 callbacks=[TensorBoard(log_dir='./log_AO'), checkpoint])
+    #############################################################
+    # automatically change lr
+    def scheduler(epoch):
+        ini_lr = 0.001
+        lr = ini_lr
+        if epoch == 5:
+            lr = ini_lr / 5
+        if epoch == 10:
+            lr = ini_lr / 10
+        return lr
 
-    # AO_model = load_model('./saved_models_AO/***.h5')     # this line shows how to load model
-    # AO_model.predict(audio_input)
+    rlr = LearningRateScheduler(scheduler, verbose=1)
+    #############################################################
+
+    # ///////////////////////////////////////////////////////// #
+    # read train and val file name
+    # format: mix.npy single.npy single.npy
+    trainfile = []
+    valfile = []
+    with open('./trainfile.txt', 'r') as t:
+        trainfile = t.readlines()
+    with open('./valfile.txt', 'r') as v:
+        valfile = v.readlines()
+    # ///////////////////////////////////////////////////////// #
+
+    # the training steps
+    def latest_file(dir):
+        lists = os.listdir(dir)
+        lists.sort(key=lambda fn: os.path.getmtime(dir + fn))
+        file_latest = os.path.join(dir, lists[-1])
+        return file_latest
+
+    if RESTORE:
+        last_file = latest_file('./saved_models_AO/')
+        AO_model = load_model(last_file)
+        info = last_file.strip().split('-')
+        initial_epoch = int(info[-2])
+        # print(initial_epoch)
+    else:
+        AO_model = AO_model(people_num)
+
+    # AO_model.fit(audio_input, audio_label,
+    #              epochs=epochs,
+    #              batch_size=2,
+    #              validation_data=(audio_input, audio_label),
+    #              shuffle=True,
+    #              callbacks=[TensorBoard(log_dir='./log_AO'), checkpoint, rlr],
+    #              initial_epoch=initial_epoch)
+
+    train_generator = AudioGenerator(trainfile, database_dir_path='./', batch_size=batch_size, shuffle=True)
+    val_generator = AudioGenerator(valfile, database_dir_path='./', batch_size=batch_size, shuffle=True)
+
+    AO_model.fit_generator(generator=train_generator,
+                           validation_data=val_generator,
+                           epochs=epochs,
+                           callbacks=[TensorBoard(log_dir='./log_AO'), checkpoint, rlr],
+                           initial_epoch=initial_epoch
+                           )
 
