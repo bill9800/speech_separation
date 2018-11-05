@@ -87,7 +87,7 @@ def real_imag_shrink(F,dim='new'):
         T = F[:,::2] + F[:,1::2]
     return T
 
-def power_law(data,power):
+def power_law(data,power=0.6):
     # assume input has negative value
     mask = np.zeros(data.shape)
     mask[data>=0] = 1
@@ -96,19 +96,19 @@ def power_law(data,power):
     data = data*mask
     return data
 
-def fast_stft(data,power=True,**kwargs):
+def fast_stft(data,power=False,**kwargs):
     # directly transform the wav to the input
     # power law = A**0.3 , to prevent loud audio from overwhelming soft audio
     if power:
-        data = power_law(data,0.3)
+        data = power_law(data)
     return real_imag_expand(stft(data))
 
-def fast_istft(F,power=True,**kwargs):
+def fast_istft(F,power=False,**kwargs):
     # directly transform the frequency domain data to time domain data
     # apply power law
     T = istft(real_imag_shrink(F))
     if power:
-        T = power_law(T,(1.0/0.3))
+        T = power_law(T,(1.0/0.6))
     return T
 
 def generate_one_sample(audio_path_list,num_speaker,fix_sr=16000,verbose=0):
