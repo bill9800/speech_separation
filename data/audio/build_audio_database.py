@@ -6,14 +6,24 @@ import numpy as np
 import utils
 import operator
 import itertools
+import time
 
 # Parameter
 SAMPLE_RANGE = (0,350) # data usage to generate database
 TEST_RANGE = (350,550) # data usage to generate database
 REPO_PATH = os.path.expanduser("./audio_train")
-TRAIN = 0
-TEST = 1
+TRAIN = 1
+TEST = 0
 
+# time measure decorator
+def timit(func):
+    def cal_time(*args,**kwargs):
+        tic = time.time()
+        result = func(*args,**kwargs)
+        tac = time.time()
+        print(func.__name__,'running time: ',(tac-tic),'ms')
+        return result
+    return cal_time
 
 # create directory to store database
 def init_dir():
@@ -28,7 +38,6 @@ def init_dir():
 
     if not os.path.isdir('./audio_database/crm'):
         os.mkdir('./audio_database/crm')
-
 
 
 def generate_path_list(sample_range=SAMPLE_RANGE,repo_path=REPO_PATH):
@@ -54,7 +63,6 @@ def single_audio_to_npy(audio_path_list,fix_sr=16000):
         data = utils.fast_stft(data)
         name = 'single-%05d'%idx
         np.save(('audio_database/single/%s.npy'%name),data)
-
 
 def generate_mix_sample(audio_path_list,num_speaker,fix_sr=16000,verbose=0):
     '''
@@ -86,17 +94,15 @@ def generate_mix_sample(audio_path_list,num_speaker,fix_sr=16000,verbose=0):
     mix_rate = 1.0 / float(num_speaker)
     mix = np.zeros(shape=data_list[0].shape)
     for data in data_list:
-        np.add(mix,data*mix_rate)
-
+        mix += data*mix_rate
     # transfrom data via STFT and several preprocessing function
     for i in range(num_speaker):
-        F = utils.fast_stft(data_list[i])
+        F = utils.fast_stft(data_list[i],power=False)
         F_list.append(F)
-    F_mix = utils.fast_stft(mix)
-
+    F_mix = utils.fast_stft(mix,power=False)
     # create cRM for each speaker and fill into y_sample
     for i in range(num_speaker):
-        cRM_list.append(np.divide(F_list[i], F_mix, out=np.zeros_like(F_list[i]), where=F_mix!=0))
+        cRM_list.append(utils.fast_cRM(F_list[i],F_mix))
 
     # return values
     if verbose == 1:
@@ -122,6 +128,7 @@ def generate_mix_sample(audio_path_list,num_speaker,fix_sr=16000,verbose=0):
         name = crm_name + ("-%05d"%audio_path_list[i][0])
         np.save(('audio_database/crm/%s.npy'%name), cRM_list[i])
 
+@timit
 def generate_dataset(sample_range,repo_path,num_speaker=2):
     '''
     A function to generate dataset
@@ -140,6 +147,7 @@ def generate_dataset(sample_range,repo_path,num_speaker=2):
 
     print('number of the data generated: ',num_data)
 
+@timit
 def train_test_split(num_start = 0,num_data = 50000,database_txt_path="audio_database/dataset.txt",
                      train_txt_path="audio_database/dataset_train.txt",test_txt_path="audio_database/dataset_val.txt",test_rate=0.01):
     step = 1 // test_rate
@@ -159,6 +167,8 @@ def train_test_split(num_start = 0,num_data = 50000,database_txt_path="audio_dat
             train_txt.write(line)
         train_txt.close()
         test_txt.close()
+
+@timit
 def create_testset(num_start = 53400,num_data=12375,database_txt_path="audio_database/dataset.txt",test_txt_path="audio_database/dataset_test.txt"):
     count = 0
     with open(database_txt_path,'r') as f:

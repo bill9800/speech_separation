@@ -109,7 +109,7 @@ def AO_model(people_num=2):
     fc3 = Dense(600, name="fc3", activation='relu', kernel_initializer=he_normal(seed=65))(fc2)
     print('fc3:', fc3.shape)
 
-    complex_mask = Dense(257 * 2 * people_num, name="complex_mask", activation='sigmoid', kernel_initializer=he_normal(seed=65))(fc3)
+    complex_mask = Dense(257 * 2 * people_num, name="complex_mask", kernel_initializer=he_normal(seed=65))(fc3)
     print('complex_mask:', complex_mask.shape)
 
     complex_mask_out = Reshape((298, 257, 2, people_num))(complex_mask)
