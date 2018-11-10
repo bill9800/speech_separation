@@ -8,7 +8,7 @@ from MyGenerator import AudioGenerator
 from keras.callbacks import TensorBoard
 from keras import optimizers
 import os
-
+from model_loss import audio_discriminate_loss as audio_loss
 
 
 # create AO model
@@ -21,15 +21,17 @@ RESTORE = False
 people_num = 2
 epochs = 100
 initial_epoch = 0
-batch_size = 16 # 4 to feed one 16G GPU
+batch_size = 8 # 4 to feed one 16G GPU
+gamma_loss = 0.1
+beta_loss = 0.5
 
 # physical devices option to accelerate training process
 workers = 1 # num of core
 use_multiprocessing = False
-NUM_GPU = 2
+NUM_GPU = 1
 
 # PATH
-path = './saved_models_AO_with_norm' # model path
+path = './saved_models_AO' # model path
 database_dir_path = '../../data/audio/audio_database'
 #############################################################
 
@@ -45,11 +47,11 @@ checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_
 #############################################################
 # automatically change lr
 def scheduler(epoch):
-    ini_lr = 0.001
+    ini_lr = 0.00005
     lr = ini_lr
-    if epoch == 5:
+    if epoch >= 5:
         lr = ini_lr / 5
-    if epoch == 10:
+    if epoch >= 10:
         lr = ini_lr / 10
     return lr
 
@@ -80,7 +82,9 @@ val_generator = AudioGenerator(valfile,database_dir_path=database_dir_path, batc
 if NUM_GPU > 1:
     parallel_model = ModelMGPU(AO_model,NUM_GPU)
     adam = optimizers.Adam()
-    parallel_model.compile(loss='mse',optimizer=adam)
+    loss = audio_loss(gamma=gamma_loss,beta=beta_loss,num_speaker=people_num)
+    parallel_model.compile(loss=loss,optimizer=adam)
+    print(AO_model.summary())
     parallel_model.fit_generator(generator=train_generator,
                            validation_data=val_generator,
                            epochs=epochs,
@@ -90,6 +94,10 @@ if NUM_GPU > 1:
                            initial_epoch=initial_epoch
                            )
 if NUM_GPU <= 1:
+    adam = optimizers.Adam()
+    loss = audio_loss(gamma=gamma_loss,beta=beta_loss, num_speaker=people_num)
+    AO_model.compile(optimizer=adam, loss=loss)
+    print(AO_model.summary())
     AO_model.fit_generator(generator=train_generator,
                            validation_data=val_generator,
                            epochs=epochs,
