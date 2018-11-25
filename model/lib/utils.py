@@ -7,6 +7,7 @@ from tensorflow.python.platform import gfile
 from tensorflow.core.framework import graph_pb2
 import operator
 import itertools
+from numpy import inf
 
 #### Load Data ####
 # windowing fft/ifft function
@@ -80,12 +81,12 @@ def real_imag_expand(c_data,dim='new'):
 def real_imag_shrink(F,dim='new'):
     # dim = 'new' or 'same'
     # shrink the complex data to combine real and imag number
-    T = np.zeros((F.shape[0], F.shape[1]))
+    F_shrink = np.zeros((F.shape[0], F.shape[1]))
     if dim =='new':
-        T = F[:,:,0] + F[:,:,1]
+        F_shrink = F[:,:,0] + F[:,:,1]*1j
     if dim =='same':
-        T = F[:,::2] + F[:,1::2]
-    return T
+        F_shrink = F[:,::2] + F[:,1::2]*1j
+    return F_shrink
 
 def power_law(data,power=0.6):
     # assume input has negative value
@@ -120,15 +121,16 @@ def generate_cRM(Y,S):
     :return: structed cRM
     '''
     M = np.zeros(Y.shape)
+    epsilon = 1e-8
     # real part
     M_real = np.multiply(Y[:,:,0],S[:,:,0])+np.multiply(Y[:,:,1],S[:,:,1])
     square_real = np.square(Y[:,:,0])+np.square(Y[:,:,1])
-    M_real = np.divide(M_real,square_real)
+    M_real = np.divide(M_real,square_real+epsilon)
     M[:,:,0] = M_real
     # imaginary part
     M_img = np.multiply(Y[:,:,0],S[:,:,1])-np.multiply(Y[:,:,1],S[:,:,0])
     square_img = np.square(Y[:,:,0])+np.square(Y[:,:,1])
-    M_img = np.divide(M_img,square_img)
+    M_img = np.divide(M_img,square_img+epsilon)
     M[:,:,1] = M_img
     return M
 
@@ -141,7 +143,14 @@ def cRM_tanh_compress(M,K=10,C=0.1):
     :return crm: compressed crm
     '''
 
-    crm = K * np.divide((1-np.exp(-C*M)),(1+np.exp((-C*M))))
+    numerator = 1-np.exp(-C*M)
+    numerator[numerator == inf] = 1
+    numerator[numerator == -inf] = -1
+    denominator = 1+np.exp(-C*M)
+    denominator[denominator == inf] = 1
+    denominator[denominator == -inf] = -1
+    crm = K * np.divide(numerator,denominator)
+
     return crm
 
 def cRM_tanh_recover(O,K=10,C=0.1):
@@ -182,7 +191,7 @@ def fast_icRM(Y,crm,K=10,C=0.1):
     :return S: clean stft
     '''
     M = cRM_tanh_recover(crm,K,C)
-    S = np.zeros(np.shape(Fmix))
+    S = np.zeros(np.shape(M))
     S[:,:,0] = np.multiply(M[:,:,0],Y[:,:,0])-np.multiply(M[:,:,1],Y[:,:,1])
     S[:,:,1] = np.multiply(M[:,:,0],Y[:,:,1])+np.multiply(M[:,:,1],Y[:,:,0])
     return S
@@ -330,24 +339,54 @@ def inspect_operation(graph_path,output_txt_file):
         for i in sorted_ops_count:
             print("{} : {}".format(i[0], i[1]))
 
+def SDR(true_file,pred_file):
+    T_true,_ = librosa.load(true_file,sr=16000)
+    F_true = fast_stft(T_true)
+    T_pred, _ = librosa.load(pred_file,sr=16000)
+    F_pred = fast_stft(T_pred)
+    F_inter = F_true - F_pred
+    P_true = np.sum(np.square(F_true[:,:,0])+np.square(F_true[:,:,1]))
+    P_inter = np.sum(np.square(F_inter[:,:,0])+np.square(F_inter[:,:,1]))
+    return 10*np.log10(np.divide(P_true,P_inter))
 
-
-
+def phase_enhance_pred(mix_STFT,pred_file, mode='STFT'):
+    if mode=='wav':
+        T_pred, _ = librosa.load(pred_file,sr=16000)
+        F_pred = fast_stft(T_pred)
+    if mode =='STFT':
+        F_pred = pred_file
+    M = np.sqrt(np.square(F_pred[:,:,0])+np.square(F_pred[:,:,1]))     #magnitude
+    print('shape M:',M.shape)
+    P = np.arctan(np.divide(mix_STFT[:,:,0],mix_STFT[:,:,1]))          #phase
+    print('shape p:',P.shape)
+    F_enhance = np.zeros_like(F_pred)
+    print('shape enhance',F_enhance.shape)
+    F_enhance[:,:,0] = np.multiply(M,np.cos(P))
+    F_enhance[:,:,1] = np.multiply(M,np.sin(P))
+    print('shape enhance', F_enhance.shape)
+    T_enhance = fast_istft(F_enhance)
+    return T_enhance
 
 ## test code part
 if __name__ == '__main__':
     # check data generative function
-    sample_range = (0,20)
-    repo_path = os.path.expanduser('../../data/audio/audio_train')
-    X_data,y_data = generate_dataset(sample_range,repo_path,num_speaker=2,verbose=1)
-    print('shape of the X data: ',X_data.shape)
-    print('shape of the y data: ',y_data.shape)
+    CHECK1 = 0
+    CHECK2 = 1
+    if CHECK1:
+        sample_range = (0,20)
+        repo_path = os.path.expanduser('../../data/audio/audio_train')
+        X_data,y_data = generate_dataset(sample_range,repo_path,num_speaker=2,verbose=1)
+        print('shape of the X data: ',X_data.shape)
+        print('shape of the y data: ',y_data.shape)
 
-
-
-
-
-
+    if CHECK2:
+    # check SDR calculation
+        original_audio_path = '../../data/audio/audio_train'
+        predict_audio_path1 = '../model_v1/pred_with_enhance'
+        predict_audio_path2 = '../model_v1/pred_without_enhance'
+        print(SDR(original_audio_path + '/trim_audio_train24.wav', original_audio_path + '/trim_audio_train24.wav'))
+        #print(SDR(original_audio_path+'/trim_audio_train340.wav',predict_audio_path1+'/00009-00340-00340.wav'))
+        print(SDR(original_audio_path + '/trim_audio_train340.wav', predict_audio_path2 + '/00009-00340-00340.wav'))
 
 
 
