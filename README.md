@@ -8,7 +8,7 @@ This project is highly inspired by the paper[1], and is still working to improve
 
 [AVspeech dataset](https://looking-to-listen.github.io/) : contains 4700 hours of video segments, from a total of 290k YouTube videos.
 
-Customized video and audio downloader provided in data. (based on youtube-dl,sox,ffmpeg)  
+Customized video and audio downloader are provided in data/. (based on youtube-dl,sox,ffmpeg)  
 
 # Preprocessing
 
