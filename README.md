@@ -28,7 +28,7 @@ Loss function : modified discriminative loss function inspired from paper[4].
 
 # Prediction
 
-Apply complex ratio mask (cRM) to enhance phase spectrum. Maintain the quality during transformation by hyperbolic tangent fucntion.[4]
+Apply complex ratio mask (cRM) to enhance phase spectrum. Maintain the quality during transformation by hyperbolic tangent fucntion.[5]
 
 The model will be evaluated by signal-to-distortion ratio.
 
