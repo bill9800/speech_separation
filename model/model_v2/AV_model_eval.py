@@ -60,7 +60,7 @@ if NUM_GPU > 1:
             assert cRM.shape == (298,257,2)
             F = utils.fast_icRM(mix,cRM)
             T = utils.fast_istft(F,power=False)
-            filename = dir_path+prefix+single_idxs[i]+'.wav'
+            filename = dir_path+prefix+str(single_idxs[i])+'.wav'
             wavfile.write(filename,16000,T)
 
 
