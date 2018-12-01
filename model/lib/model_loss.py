@@ -28,7 +28,7 @@ def audio_discriminate_loss2(gamma=0.1,beta = 2*0.1,num_speaker=2):
         for i in range(num_speaker):
             for j in range(i+1,num_speaker):
                 #sum_mtr -= beta*K.square(S_pred[:,:,:,i]-S_pred[:,:,:,j])
-                sum_mtr += beta*K.square(S_true[:,:,:,:,i]-S_true[:,:,:,:,j])
+                #sum_mtr += beta*K.square(S_true[:,:,:,:,i]-S_true[:,:,:,:,j])
 
         #sum = K.sum(K.maximum(K.flatten(sum_mtr),0))
         loss = K.mean(K.flatten(sum_mtr))
