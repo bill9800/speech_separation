@@ -16,9 +16,17 @@ Customized video and audio downloader are provided in [audio](https://github.com
 
 There are several preprocess functions in the [utils](https://github.com/bill9800/speech_separation/tree/master/model/lib). Including STFT, iSTFT, power-law compression, complex mask and modified hyperbolic tangent[5] etc.
 
+Below is the preprocessing for audio data:
+
+![](img/audio.png)
+
 Apply MTCNN to detect face and correct it by checking the provided face center[2].
 
 The visual frames are transfered to 1792 (avg pooling layer) face embeddings with facenet pre-trained model[3].
+
+Below is the preprocessing for visual data:
+
+![](img/video.png)
 
 # Model
 
