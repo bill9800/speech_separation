@@ -14,17 +14,11 @@ Customized video and audio downloader are provided in [audio](https://github.com
 
 # Preprocessing
 
-There are several preprocess functions in the [utils](https://github.com/bill9800/speech_separation/tree/master/model/lib). Including STFT, iSTFT, power-law compression, complex mask and modified hyperbolic tangent[5] etc.
-
-Below is the preprocessing for audio data:
+There are several preprocess functions in the [utils](https://github.com/bill9800/speech_separation/tree/master/model/lib). Including STFT, iSTFT, power-law compression, complex mask and modified hyperbolic tangent[5] etc. Below is the preprocessing for audio data:
 
 ![](img/audio.png)
 
-Apply MTCNN to detect face and correct it by checking the provided face center[2].
-
-The visual frames are transfered to 1792 (avg pooling layer) face embeddings with facenet pre-trained model[3].
-
-Below is the preprocessing for visual data:
+For the visual part, MTCNN is applied to detect face and correct it by checking the provided face center[2]. The visual frames are transfered to 1792 (lowest layer in the network that is not spatially varying) face embeddings features with pre-trained FaceNet model[3]. Below is the preprocessing for visual data:
 
 ![](img/video.png)
 
@@ -32,7 +26,7 @@ Below is the preprocessing for visual data:
 
 Audio-only model is provided in [model_v1](https://github.com/bill9800/speech_separation/tree/master/model/model_v1) and Audio-visual model is provided in [model_v2](https://github.com/bill9800/speech_separation/tree/master/model/model_v2).
 
-Below is the brief structure of Audio-Visual model provided by Google AI, some layers are revised corresponding to our customized compression and dataset. 
+Follwing is the brief structure of Audio-Visual model provided by Google AI, some layers are revised corresponding to our customized compression and dataset. 
 
 ![](img/network.jpg)
 
