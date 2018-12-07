@@ -8,11 +8,13 @@ import itertools
 import time
 import random
 import math
+import scipy.io.wavfile as wavfile
 
 # Parameter
 SAMPLE_RANGE = (0,20) # data usage to generate database
-WAV_REPO_PATH = os.path.expanduser("./audio_train")
-DATABASE_REPO_PATH = 'audio_database_train'
+WAV_REPO_PATH = os.path.expanduser("./norm_audio_train")
+DATABASE_REPO_PATH = 'AV_model_database'
+FRAME_LOG_PATH = '../video/valid_frame.txt'
 NUM_SPEAKER = 2
 
 # time measure decorator
@@ -39,8 +41,11 @@ def init_dir(path = DATABASE_REPO_PATH ):
     if not os.path.isdir('%s/crm'%path):
         os.mkdir('%s/crm'%path)
 
+    if not os.path.isdir('%s/mix_wav'%path):
+        os.mkdir('%s/mix_wav'%path)
+
 @timit
-def generate_path_list(sample_range=SAMPLE_RANGE,repo_path=WAV_REPO_PATH):
+def generate_path_list(sample_range=SAMPLE_RANGE,repo_path=WAV_REPO_PATH,frame_path=FRAME_LOG_PATH):
     '''
 
     :param sample_range:
@@ -48,17 +53,27 @@ def generate_path_list(sample_range=SAMPLE_RANGE,repo_path=WAV_REPO_PATH):
     :return: 2D array with idx and path (idx_wav,path_wav)
     '''
     audio_path_list = []
+    frame_set = set()
+
+    with open(frame_path,'r') as f:
+        frames = f.readlines()
+    
+    for i in range(len(frames)):
+        frame = frames[i].replace('\n','').replace('frame_','')
+        frame_set.add(int(frame))
 
     for i in range(sample_range[0],sample_range[1]):
+        print('\rchecking...%d'%int(frame),end='')
         path = repo_path + '/trim_audio_train%d.wav'%i
-        if os.path.exists(path):
+        if os.path.exists(path) and (i in frame_set):
             audio_path_list.append((i,path))
-    print('length of the path list: ',len(audio_path_list))
+    print('\nlength of the path list: ',len(audio_path_list))
     return audio_path_list
 
 # data generate function
 def single_audio_to_npy(audio_path_list,database_repo=DATABASE_REPO_PATH,fix_sr=16000):
     for idx,path in audio_path_list:
+        print('\rsingle npy generating... %d'%((idx/len(audio_path_list))*100),end='')
         data, _ = librosa.load(path, sr=fix_sr)
         data = utils.fast_stft(data)
         name = 'single-%05d'%idx
@@ -66,6 +81,7 @@ def single_audio_to_npy(audio_path_list,database_repo=DATABASE_REPO_PATH,fix_sr=
             f.write('%s.npy'%name)
             f.write('\n')
         np.save(('%s/single/%s.npy'%(database_repo,name)),data)
+    print()
 
 
 # split single TF data to different part in order to mix
@@ -92,6 +108,7 @@ def split_to_mix(audio_path_list,database_repo=DATABASE_REPO_PATH,partition=2):
 # mix single TF data
 def all_mix(split_list,database_repo=DATABASE_REPO_PATH,partition=2):
     assert len(split_list) == partition
+    print('mixing data...')
     num_mix = 1
     num_mix_check = 0
     for part in split_list:
@@ -104,11 +121,8 @@ def all_mix(split_list,database_repo=DATABASE_REPO_PATH,partition=2):
     for combo_idx in combo_idx_list:
         num_mix_check +=1
         single_mix(combo_idx,split_list,database_repo)
-
-
-
-
-
+        print('\rnum of completed mixing audio : %d'%num_mix_check,end='')  
+    print()
 # mix several wav file and store TF domain data with npy
 def single_mix(combo_idx,split_list,database_repo):
     assert len(combo_idx) == len(split_list)
@@ -127,6 +141,10 @@ def single_mix(combo_idx,split_list,database_repo):
     mix_wav = np.zeros_like(wav_list[0])
     for wav in wav_list:
         mix_wav += wav * mix_rate
+
+    # save mix wav file
+    wav_name = prefix+mid_name+'.wav'
+    wavfile.write('%s/mix_wav/%s'%(database_repo,wav_name),16000,mix_wav)
 
     # transfer mix wav to TF domain
     F_mix = utils.fast_stft(mix_wav)
@@ -226,7 +244,7 @@ if __name__ == "__main__":
     all_crm(mix_log_path)
 
     dataset_log_path ='%s/dataset.txt'%DATABASE_REPO_PATH
-    train_test_split(dataset_log_path)
+    train_test_split(dataset_log_path,data_range=[0,260000])
 
 
 
