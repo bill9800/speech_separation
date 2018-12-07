@@ -339,7 +339,7 @@ def inspect_operation(graph_path,output_txt_file):
         for i in sorted_ops_count:
             print("{} : {}".format(i[0], i[1]))
 
-def SDR(true_file,pred_file):
+def SNR(true_file,pred_file):
     T_true,_ = librosa.load(true_file,sr=16000)
     F_true = fast_stft(T_true)
     T_pred, _ = librosa.load(pred_file,sr=16000)
@@ -380,13 +380,13 @@ if __name__ == '__main__':
         print('shape of the y data: ',y_data.shape)
 
     if CHECK2:
-    # check SDR calculation
+    # check SNR calculation
         original_audio_path = '../../data/audio/audio_train'
         predict_audio_path1 = '../model_v1/pred_with_enhance'
         predict_audio_path2 = '../model_v1/pred_without_enhance'
-        print(SDR(original_audio_path + '/trim_audio_train24.wav', original_audio_path + '/trim_audio_train24.wav'))
-        #print(SDR(original_audio_path+'/trim_audio_train340.wav',predict_audio_path1+'/00009-00340-00340.wav'))
-        print(SDR(original_audio_path + '/trim_audio_train340.wav', predict_audio_path2 + '/00009-00340-00340.wav'))
+        print(SNR(original_audio_path + '/trim_audio_train24.wav', original_audio_path + '/trim_audio_train24.wav'))
+        #print(SNR(original_audio_path+'/trim_audio_train340.wav',predict_audio_path1+'/00009-00340-00340.wav'))
+        print(SNR(original_audio_path + '/trim_audio_train340.wav', predict_audio_path2 + '/00009-00340-00340.wav'))
 
 
 
