@@ -17,13 +17,18 @@ def mkdir(dir_name,loc=''):
     command += 'mkdir ' + dir_name
     os.system(command)
 
+def m_link(youtube_id):
+    # return the youtube actual link
+    link = 'https://www.youtube.com/watch?v='+youtube_id
+    return link
 
 def download(loc,name,link,sr=16000,type='audio'):
-    # download audio/video from the link
+    # download audio from the link
     # loc   | the location for downloaded file
-    # name  | the name for the file
+    # name  | the name for the audio file
     # link  | the link to downloaded by youtube-dl
     # type  | the type of downloaded file
+
 
     if type == 'audio':
         # download wav file from the youtube link
@@ -32,6 +37,7 @@ def download(loc,name,link,sr=16000,type='audio'):
         command += 'ffmpeg -i o%s.wav -ar %d -ac 1 %s.wav;' % (name,sr,name)
         command += 'rm o%s.wav' % name
         os.system(command)
+
 
 
 def cut(loc,name,start_time,end_time):
