@@ -1,14 +1,16 @@
 # speech_separation
 
+# Overview
+
 This is a repository for speech separation tasks. 
 
-This project is highly inspired by the paper[1], and is still working to improve the performance.
+This project is highly inspired by the paper [Lookng to Listen at the Cocktail Party](https://arxiv.org/abs/1804.03619)[1].
 
 # Data
 
 [AVspeech dataset](https://looking-to-listen.github.io/) : contains 4700 hours of video segments, from a total of 290k YouTube videos.
 
-Customized video and audio downloader are provided in data/audio and data/video. (based on youtube-dl,sox,ffmpeg)  
+Customized video and audio downloader are provided in [audio](https://github.com/bill9800/speech_separation/tree/master/data/audio) and [video](https://github.com/bill9800/speech_separation/tree/master/data/video). (based on youtube-dl,sox,ffmpeg)  
 
 # Preprocessing
 
@@ -22,11 +24,9 @@ The visual frames are transfered to 1792 (avg pooling layer) face embeddings wit
 
 Audio-only model is provided in [model_v1](https://github.com/bill9800/speech_separation/tree/master/model/model_v1) and Audio-visual model is provided in [model_v2](https://github.com/bill9800/speech_separation/tree/master/model/model_v2).
 
-Below is the structure of model_v2 :
+Below is the brief structure of Audio-Visual model provided by Google AI, some layers are revised corresponding to our customized compression and dataset. 
 
-Audio part : Dilated CNN + Bidirectional LSTM.
-
-Video part : (pretrained MTCNN + Facenet) + dilated CNN + Bidirectional LSTM.
+![](img/network.jpg)
 
 # Training 
 
@@ -38,7 +38,7 @@ Optimizer : Adam
 
 Apply complex ratio mask (cRM) to STFT of the mixed speech, we can produce the STFT of single speaker’s speech.
 
-Samples to complete the prediction are provided in eval files in [model_v1](https://github.com/bill9800/speech_separation/tree/master/model/model_v1) and [model_v2](https://github.com/bill9800/speech_separation/tree/master/model/model_v2).
+Samples to complete the prediction are provided in eval file in [model_v1](https://github.com/bill9800/speech_separation/tree/master/model/model_v1) and [model_v2](https://github.com/bill9800/speech_separation/tree/master/model/model_v2).
 
 # Reference
 
