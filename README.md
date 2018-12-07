@@ -8,11 +8,11 @@ This project is highly inspired by the paper[1], and is still working to improve
 
 [AVspeech dataset](https://looking-to-listen.github.io/) : contains 4700 hours of video segments, from a total of 290k YouTube videos.
 
-Customized video and audio downloader are provided in data/. (based on youtube-dl,sox,ffmpeg)  
+Customized video and audio downloader are provided in data/audio and data/video. (based on youtube-dl,sox,ffmpeg)  
 
 # Preprocessing
 
-There are several preprocess functions in the lib. Including STFT, iSTFT, power-law compression, complex mask etc.
+There are several preprocess functions in the utils. Including STFT, iSTFT, power-law compression, complex mask and modified hyperbolic tangent[5] etc.
 
 Apply MTCNN to detect face and correct it by checking the provided face center. [2]
 
@@ -20,18 +20,23 @@ The visual frames are transfered to 1792 (avg pooling layer) face embeddings wit
 
 # Model
 
+Audio-only model is provided in model_v1 and Audio-visual model is provided in model_v2.
+
+Below is the structure of model_v2 :
+
 Audio part : Dilated CNN + Bidirectional LSTM.
 
 Video part : (pretrained MTCNN + Facenet) + dilated CNN + Bidirectional LSTM.
 
+# Training 
+
 Loss function : modified discriminative loss function inspired from paper[4].
+
+Optimizer : Adam 
 
 # Prediction
 
-Apply complex ratio mask (cRM) to enhance phase spectrum. Maintain the quality during transformation by hyperbolic tangent fucntion.[5]
-
-The model will be evaluated by signal-to-distortion ratio.
-
+Apply complex ratio mask (cRM) to STFT of the mixed speech, we can produce the STFT of single speaker’s speech.
 
 # Reference
 
