@@ -26,7 +26,7 @@ Audio-only model is provided in [model_v1](https://github.com/bill9800/speech_se
 
 Follwing is the brief structure of Audio-Visual model, some layers are revised corresponding to our customized compression and dataset. 
 
-![](img/network.jpg)
+![](img/network.jpg) [1]
 
 # Training 
 
