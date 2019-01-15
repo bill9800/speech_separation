@@ -24,8 +24,7 @@ For the visual part, MTCNN is applied to detect face and correct it by checking 
 
 Audio-only model is provided in [model_v1](https://github.com/bill9800/speech_separation/tree/master/model/model_v1) and Audio-visual model is provided in [model_v2](https://github.com/bill9800/speech_separation/tree/master/model/model_v2).
 
-Follwing is the brief structure of Audio-Visual model, some layers are revised corresponding to our customized compression and dataset.[1
-] 
+Follwing is the brief structure of Audio-Visual model, some layers are revised corresponding to our customized compression and dataset.[1] 
 
 ![](img/network.jpg)
 
