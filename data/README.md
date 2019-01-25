@@ -13,10 +13,10 @@ Following are the steps to generate training and testing data.  There are severa
 
 2.  Set the csv file to read, modify **cat_train** or **cat_test**
 
-3.  Set the range of the data in AVspeech dataset. For example from 5000-6000:
+3.  Set the range of the data in AVspeech dataset. For example from 0-20:
 
    ```python
-   m_audio('audio_train','audio_train',cat_train,5000,6000)
+   m_audio('audio_train','audio_train',cat_train,0,20)
    ```
 
 4. Run it. Generated audio files will contains in **data/audio_train/**
