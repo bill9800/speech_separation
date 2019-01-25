@@ -16,6 +16,7 @@ WAV_REPO_PATH = os.path.expanduser("./norm_audio_train")
 DATABASE_REPO_PATH = 'AV_model_database'
 FRAME_LOG_PATH = '../video/valid_frame.txt'
 NUM_SPEAKER = 2
+MAX_NUM_SAMPLE = 50000
 
 # time measure decorator
 def timit(func):
@@ -244,7 +245,7 @@ if __name__ == "__main__":
     all_crm(mix_log_path)
 
     dataset_log_path ='%s/dataset.txt'%DATABASE_REPO_PATH
-    train_test_split(dataset_log_path,data_range=[0,260000])
+    train_test_split(dataset_log_path,data_range=[0,MAX_NUM_SAMPLE])
 
 
 
