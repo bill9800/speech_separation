@@ -14,13 +14,15 @@ import os
 PB = 0
 CKPT = 0
 HDF5 = 1
+MODEL_PATH = 'FaceNet_keras/facenet_keras.h5'
+VALID_FRAME_LOG_PATH = '../../data/video/valid_frame.txt'
+FACE_INPUT_PATH = '../../data/video/face_input/'
 
 data = np.random.randint(256,size=(1,160,160,3),dtype='int32')
 
 
 ###############
-graph_path = 'FaceNet_new/20180402-114759.pb'
-
+#graph_path = 'FaceNet_new/20180402-114759.pb'
 # utils.inspect_operation(graph_path,'ops.txt')
 if PB:
     with tf.gfile.FastGFile(graph_path,'rb') as f:
@@ -42,13 +44,13 @@ if HDF5:
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    model = load_model('FaceNet_keras/facenet_keras.h5')
+    model = load_model(MODEL_PATH)
     model.summary()
     avgPool_layer_model = Model(inputs=model.input,outputs=model.get_layer('AvgPool').output)
     # print(avgPool_layer_model.predict(data))
 
     lines = []
-    with open('./valid_frame.txt', 'r') as f:
+    with open(VALID_FRAME_LOG_PATH, 'r') as f:
         lines = f.readlines()
 
     for line in lines:
@@ -62,7 +64,7 @@ if HDF5:
                 tailname = '_' + str(i) + '.jpg'
             picname = headname + tailname
             # print(picname)
-            I = mpimg.imread('./face_input/' + picname)
+            I = mpimg.imread(FACE_INPUT_PATH + picname)
             I_np = np.array(I)
             I_np = I_np[np.newaxis, :, :, :]
             # print(I_np.shape)
