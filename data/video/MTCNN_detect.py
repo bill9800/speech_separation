@@ -5,8 +5,11 @@ import os
 
 cat_train = pd.read_csv('../audio/catalog/avspeech_train.csv')
 frame_path = './frames/'
-output_dir = 'face_input'
-detect_range = (1811,2000)
+output_dir = './face_input'
+detect_range = (0,20)
+
+if not os.path.isdir('./face_input'):
+    os.mkdir('./face_input')
 
 def bounding_box_check(faces,x,y):
     # check the center
@@ -50,7 +53,7 @@ def face_detect(file,detector,frame_path=frame_path,cat_train=cat_train):
     print(file," ",x, y)
     crop_img = img[bounding_box[1]:bounding_box[1] + bounding_box[3],bounding_box[0]:bounding_box[0]+bounding_box[2]]
     crop_img = cv2.resize(crop_img,(160,160))
-    cv2.imwrite('./face_input/frame_' + name[0] + '_' + name[1] + '.jpg', crop_img)
+    cv2.imwrite('%s/frame_'%output_dir + name[0] + '_' + name[1] + '.jpg', crop_img)
     #crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
     #plt.imshow(crop_img)
     #plt.show()
