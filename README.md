@@ -10,6 +10,7 @@ This is a project to improve the speech separation task. In this project, Audio-
 
 Customized video and audio downloader are provided in [audio](https://github.com/bill9800/speech_separation/tree/master/data/audio) and [video](https://github.com/bill9800/speech_separation/tree/master/data/video). (based on youtube-dl,sox,ffmpeg)  
 
+Instrouction for generating data is under [Data](https://github.com/bill9800/speech_separation/tree/master/data/README.md). 
 # Preprocessing
 
 There are several preprocess functions in the [utils](https://github.com/bill9800/speech_separation/tree/master/model/lib). Including STFT, iSTFT, power-law compression, complex mask and modified hyperbolic tangent[5] etc. Below is the preprocessing for audio data:
