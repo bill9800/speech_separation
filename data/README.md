@@ -1,4 +1,4 @@
-# Data Generation
+# Instruction for generating data
 
 Following are the steps to generate training and testing data.  There are several parameters to change in order to match different purpose. 
 
