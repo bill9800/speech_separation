@@ -2,7 +2,7 @@
 
 # Overview
 
-This is a project to improve the speech separation task. In this project, Audio-only and Audio-Visual deep learning separation models are modified based on the paper [Lookng to Listen at the Cocktail Party](https://arxiv.org/abs/1804.03619)[1]. 
+This is a project to improve the speech separation task. In this project, Audio-only and Audio-Visual deep learning separation models are modified based on the paper [Looking to Listen at the Cocktail Party](https://arxiv.org/abs/1804.03619)[1]. 
 
 # Data
 
