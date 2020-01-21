@@ -20,7 +20,7 @@ def AV_model(people_num=2):
         return Lambda(lambda x: tf.image.resize_bilinear(x, size, align_corners=True))
 
     def sliced(x, index):
-        return x[:, :, :, index]
+        return x[..., index]
 
     # --------------------------- AS start ---------------------------
     audio_input = Input(shape=(298, 257, 2))
