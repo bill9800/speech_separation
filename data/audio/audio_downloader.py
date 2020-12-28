@@ -27,8 +27,9 @@ def m_audio(loc,name,cat,start_idx,end_idx):
         avh.download(loc,f_name,link)
         avh.cut(loc,f_name,start_time,end_time)
 
-cat_train = pd.read_csv('catalog/avspeech_train.csv')
-#cat_test = pd.read_csv('catalog/avspeech_test.csv')
+header = ["link", "start_time", "end_time", "x_coord", "y_coord"]
+cat_train = pd.read_csv('catalog/avspeech_train.csv', names=header)
+#cat_test = pd.read_csv('catalog/avspeech_test.csv', names=header)
 
 # create 80000-90000 audios data from 290K
 avh.mkdir('audio_train')
